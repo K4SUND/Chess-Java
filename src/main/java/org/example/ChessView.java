@@ -12,6 +12,8 @@ import java.util.Map;
 //own class extend sub class
 public class ChessView extends JPanel {
 
+    ChessDelegate chessDelegate ;
+
     int originX = 55;
     int originY = 45;
     int cellSide = 60;
@@ -55,6 +57,23 @@ public class ChessView extends JPanel {
 
     }
 
+    public void drawPieces(Graphics2D g2){
+
+        for (int row = 0; row<8; row++)
+        {
+            for (int col = 0; col<8; col++)
+            {
+                ChessPiece p = chessDelegate.pieceAt(col,row);
+
+                if(p!=null)
+                {
+                    drawImage(g2,col,row, p.imgName);
+                }
+            }
+        }
+//        drawImage(g2,0,0,"Rook-black");
+//        drawImage(g2,0,1,"Pawn-black");
+    }
 
 
 
@@ -65,8 +84,8 @@ protected void paintChildren(Graphics g) {
     Graphics2D g2 = (Graphics2D) g;
 
     drawBoard(g2);
-    drawImage(g2,0,0,"Rook-black");
-    drawImage(g2,0,1,"Pawn-black");
+    drawPieces(g2);
+
 
 
 //        int cellSide = 600/8;
@@ -169,6 +188,7 @@ private void drawBoard(Graphics2D g2) {
 
     }
 }
+
 
 
 }
