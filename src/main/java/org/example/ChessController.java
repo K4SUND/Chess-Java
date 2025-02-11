@@ -2,7 +2,7 @@ package org.example;
 
 import javax.swing.*;
 
-public class Chess {
+public class ChessController {
 
     public static void main(String[] args) {
 //        System.out.println("Hello Chess");
@@ -20,9 +20,10 @@ public class Chess {
 
 
         //create panel object add it to frame
-        ChessPanel panel = new ChessPanel();
+        ChessView panel = new ChessView();
         frame.add(panel);
         frame.setVisible(true);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 
 

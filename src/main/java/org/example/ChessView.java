@@ -4,15 +4,13 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
 //panel
 //own class extend sub class
-public class ChessPanel extends JPanel {
+public class ChessView extends JPanel {
 
     int originX = 55;
     int originY = 45;
@@ -21,7 +19,7 @@ public class ChessPanel extends JPanel {
     Map<String, Image> keyNameValueImage = new HashMap<String, Image>();
 
 
-    public ChessPanel() {
+    public ChessView() {
         String[] imageNames = {
                 "Bishop-black",
                 "Bishop-white",
