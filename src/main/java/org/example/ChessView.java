@@ -3,6 +3,9 @@ package org.example;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.io.File;
 import java.net.URL;
 import java.util.HashMap;
@@ -10,33 +13,45 @@ import java.util.Map;
 
 //panel
 //own class extend sub class
-public class ChessView extends JPanel {
+public class ChessView extends JPanel implements MouseListener, MouseMotionListener {
 
-    ChessDelegate chessDelegate ;
+    private ChessDelegate chessDelegate ;
 
-    int originX = 55;
-    int originY = 45;
-    int cellSide = 60;
+    double scaleFactor = 0.9;
 
-    Map<String, Image> keyNameValueImage = new HashMap<String, Image>();
+    private int originX = -1;
+    private int originY = -1;
+    private int cellSide = -1;
 
 
-    public ChessView() {
+    private Map<String, Image> keyNameValueImage = new HashMap<String, Image>();
+    private int fromCol = -1;
+    private int fromRow = -1;
+
+    private ChessPiece movingPiece;
+
+    private Point movingPiecePoint;
+
+
+
+    ChessView(ChessDelegate chessDelegate) {
+
+        this.chessDelegate = chessDelegate;
+
         String[] imageNames = {
-                "Bishop-black",
-                "Bishop-white",
-                "King-black",
-                "King-white",
-                "Knight-black",
-                "Knight-white",
-                "Pawn-black",
-                "Pawn-white",
-                "Queen-black",
-                "Queen-white",
-                "Rook-black",
-                "Rook-white"
 
-
+                ChessConstants.bBishop,
+                ChessConstants.wBishop,
+                ChessConstants.bKing,
+                ChessConstants.wKing,
+                ChessConstants.bKnight,
+                ChessConstants.wKnight,
+                ChessConstants.bPawn,
+                ChessConstants.wPawn,
+                ChessConstants.bQueen,
+                ChessConstants.wQueen,
+                ChessConstants.bRook,
+                ChessConstants.wRook,
 
         };
 
@@ -53,6 +68,9 @@ public class ChessView extends JPanel {
           e.printStackTrace();
         }
 
+        addMouseListener(this);
+        addMouseMotionListener(this);
+
 
 
     }
@@ -65,7 +83,7 @@ public class ChessView extends JPanel {
             {
                 ChessPiece p = chessDelegate.pieceAt(col,row);
 
-                if(p!=null)
+                if(p!=null && p != movingPiece)
                 {
                     drawImage(g2,col,row, p.imgName);
                 }
@@ -73,6 +91,14 @@ public class ChessView extends JPanel {
         }
 //        drawImage(g2,0,0,"Rook-black");
 //        drawImage(g2,0,1,"Pawn-black");
+
+        if(movingPiece != null && movingPiecePoint != null)
+        {
+            //not descrete
+            Image img = keyNameValueImage.get(movingPiece.imgName);
+            g2.drawImage(img,movingPiecePoint.x - cellSide/2,movingPiecePoint.y-cellSide/2,cellSide,cellSide, null);
+
+        }
     }
 
 
@@ -81,6 +107,15 @@ public class ChessView extends JPanel {
 @Override
 protected void paintChildren(Graphics g) {
     super.paintChildren(g);
+
+    int smaller = Math.min(getSize().width,getSize().height);
+    cellSide = (int) (((double)smaller)*scaleFactor/8);
+
+    originX = (getSize().width-8 * cellSide)/2;
+    originY = (getSize().height-8 * cellSide)/2;
+
+
+
     Graphics2D g2 = (Graphics2D) g;
 
     drawBoard(g2);
@@ -190,5 +225,68 @@ private void drawBoard(Graphics2D g2) {
 }
 
 
+    @Override
+    public void mouseClicked(MouseEvent e) {
 
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+
+
+       fromCol = (e.getPoint().x - originX)/cellSide;
+       fromRow = (e.getPoint().y - originY)/cellSide;
+
+       movingPiece = chessDelegate.pieceAt(fromCol,fromRow);
+
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+
+
+        int col = (e.getPoint().x - originX)/cellSide;
+        int row = (e.getPoint().y - originY)/cellSide;
+
+//        System.out.println("from "+fromCol+" to "+col);
+
+        chessDelegate.movePiece(fromCol,fromRow,col,row);
+
+        movingPiece = null;
+        movingPiecePoint = null;
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+
+    }
+
+
+
+
+
+    /*Mouse Move Listener*/
+    @Override
+    public void mouseDragged(MouseEvent e) {
+
+//        System.out.println(e.getPoint());
+        movingPiecePoint = e.getPoint();
+        repaint();
+
+
+
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+
+    }
 }

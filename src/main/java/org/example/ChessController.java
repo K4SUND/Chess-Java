@@ -14,6 +14,12 @@ public class ChessController implements ChessDelegate {
 
     }
 
+    @Override
+    public void movePiece(int fromCol, int fromRow, int toCol, int toRow) {
+        chessModel.movePiece(fromCol,fromRow,toCol,toRow);
+        panel.repaint();
+    }
+
 
     public ChessController() {
 
@@ -23,8 +29,8 @@ public class ChessController implements ChessDelegate {
         frame.setSize(600,600);
 //        frame.setLocation(0,1300);
 
-        panel = new ChessView();
-        panel.chessDelegate = this;
+        panel = new ChessView(this);
+
 
         frame.add(panel);
         frame.setVisible(true);

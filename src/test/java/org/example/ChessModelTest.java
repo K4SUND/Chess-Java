@@ -8,6 +8,28 @@ import static junit.framework.TestCase.*;
 public class ChessModelTest extends ChessModel {
 
 
+    @Test
+    public void testReset(){
+        ChessModel chessModel = new ChessModel();
+        chessModel.reset();
+        chessModel.movePiece(0,1,0,2);
+        chessModel.reset();
+        assertNull(chessModel.pieceAt(0,2));
+        System.out.println(chessModel);
+
+    }
+    @Test
+    public void testMovePiece(){
+        ChessModel chessModel = new ChessModel();
+        chessModel.reset();
+        assertNull(chessModel.pieceAt(0,2));
+        System.out.println(chessModel);
+
+        chessModel.movePiece(0,1,0,2);
+        assertNotNull(chessModel.pieceAt(0,2));
+        System.out.println(chessModel);
+
+    }
 
     @Test
     public void testPieceAt(){
