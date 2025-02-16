@@ -163,7 +163,7 @@ protected void paintChildren(Graphics g) {
 
 private void drawImage(Graphics2D g2, int col, int row, String imgName){
     Image img = keyNameValueImage.get(imgName);
-    g2.drawImage(img,originX+col*cellSide,originY+row*cellSide,cellSide,cellSide, null);
+    g2.drawImage(img,originX+col*cellSide,originY+(7-row)*cellSide,cellSide,cellSide, null);
 
 }
 
@@ -173,7 +173,7 @@ private Image loadImage(String imgFileName) throws Exception {
     if (res == null) {
         return null;
     } else {
-        System.out.println("Yeah");
+//        System.out.println("Yeah");
 
         File imgFile = new File(res.toURI());
 
@@ -235,7 +235,7 @@ private void drawBoard(Graphics2D g2) {
 
 
        fromCol = (e.getPoint().x - originX)/cellSide;
-       fromRow = (e.getPoint().y - originY)/cellSide;
+       fromRow = 7 - (e.getPoint().y - originY)/cellSide;
 
        movingPiece = chessDelegate.pieceAt(fromCol,fromRow);
 
@@ -248,12 +248,15 @@ private void drawBoard(Graphics2D g2) {
 
 
         int col = (e.getPoint().x - originX)/cellSide;
-        int row = (e.getPoint().y - originY)/cellSide;
+        int row = 7- (e.getPoint().y - originY)/cellSide;
 
-//        System.out.println("from "+fromCol+" to "+col);
 
-        chessDelegate.movePiece(fromCol,fromRow,col,row);
 
+        if(fromCol != col || fromRow != row)
+        {
+            chessDelegate.movePiece(fromCol,fromRow,col,row);
+        }
+//        System.out.println("from "+fromCol+ fromRow+ " to "+col+" "+row);
         movingPiece = null;
         movingPiecePoint = null;
 
