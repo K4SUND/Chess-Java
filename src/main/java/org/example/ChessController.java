@@ -18,6 +18,9 @@ public class ChessController implements ChessDelegate, ActionListener{
 
 
 
+    //run 2 different computers
+    private String SOCKET_SERVER_IP = "localhost";
+
     private int PORT = 50000;
 
     private JFrame frame;
@@ -82,10 +85,12 @@ public class ChessController implements ChessDelegate, ActionListener{
             @Override
             public void windowClosing(WindowEvent e) {
                 super.windowClosing(e);
-                printWriter.close();
+                if(printWriter != null) printWriter.close();
+//                printWriter.close();
 //                scanner.close();
                 try {
-                    socket.close();
+                    if(listener != null) listener.close();
+                    if(socket != null) socket.close();
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
@@ -248,7 +253,7 @@ public class ChessController implements ChessDelegate, ActionListener{
             try {
 
 //                    only once use button
-                socket = new Socket("localHost",PORT);
+                socket = new Socket(SOCKET_SERVER_IP,PORT);
                 System.out.println("Client connected to port "+ PORT);
                 var scanner = new Scanner(socket.getInputStream());
                 printWriter = new PrintWriter(socket.getOutputStream(), true);
@@ -366,6 +371,7 @@ Move to an another thread
 
 
             runSocketServer();
+            JOptionPane.showMessageDialog(frame,"Listening on PORT"+PORT);
 
 
 
@@ -377,6 +383,7 @@ Move to an another thread
             frame.setTitle("Chess Client");
 //            System.out.println("Connect (for socket client) Clicked");
             runSocketClient();
+            JOptionPane.showMessageDialog(frame,"Connected to port "+PORT);
 
     }
 

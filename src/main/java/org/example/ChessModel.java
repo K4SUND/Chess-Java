@@ -53,13 +53,13 @@ public class ChessModel {
 
 
 
-        ChessPiece candidate = pieceAt(fromCol,fromRow);
+        ChessPiece movingPiece = pieceAt(fromCol,fromRow);
 
 
 //        System.out.println("from "+fromCol+ fromRow+ " to "+toCol+" "+toRow);
 
         //restricted (3rd condition)
-        if(candidate==null || candidate.player != playerInTurn || fromCol == toCol && fromRow == toRow)
+        if(movingPiece==null || movingPiece.getPlayer() != playerInTurn || fromCol == toCol && fromRow == toRow)
         {
 //            System.out.println(fromCol+","+fromRow+","+toCol+","+toRow);
             return;
@@ -68,7 +68,7 @@ public class ChessModel {
         ChessPiece target = pieceAt(toCol,toRow);
         if(target != null )
         {
-            if(target.player == candidate.player){
+            if(target.getPlayer() == movingPiece.getPlayer()){
                 return ;
             }
             else{
@@ -77,8 +77,12 @@ public class ChessModel {
             }
 
         }
-        candidate.col = toCol;
-        candidate.row = toRow;
+
+        pieceSet.remove(movingPiece);
+        pieceSet.add(new ChessPiece(toCol,toRow,movingPiece.getPlayer(),movingPiece.getRank(), movingPiece.getImgName()));
+
+//        movingPiece.col = toCol;
+//        movingPiece.row = toRow;
 
 //        System.out.println(pieceSet.size());
 
@@ -95,7 +99,7 @@ public class ChessModel {
         for (ChessPiece chessPiece:pieceSet
              )
         {
-            if(chessPiece.col == col && chessPiece.row==row)
+            if(chessPiece.getCol() == col && chessPiece.getRow()==row)
             {
                 return chessPiece;
             }
@@ -119,27 +123,27 @@ public class ChessModel {
             }
             else {
                 description +=" ";
-                switch (p.rank)
+                switch (p.getRank())
                 {
                     case KING:
-                        description += p.player == Player.WHITE ? "k" :"K";
+                        description += p.getPlayer() == Player.WHITE ? "k" :"K";
                         break;
 
                     case QUEEN:
-                        description += p.player == Player.WHITE ? "q" :"Q";
+                        description += p.getPlayer() == Player.WHITE ? "q" :"Q";
                         break;
                     case BISHOP:
-                        description += p.player == Player.WHITE ? "b" :"B";
+                        description += p.getPlayer() == Player.WHITE ? "b" :"B";
                         break;
                     case ROOK:
-                        description += p.player == Player.WHITE ? "r" :"R";
+                        description += p.getPlayer() == Player.WHITE ? "r" :"R";
                         break;
                     case KNIGHT:
-                        description += p.player == Player.WHITE ? "n" :"N";
+                        description += p.getPlayer() == Player.WHITE ? "n" :"N";
                         break;
 
                     case PAWN:
-                        description += p.player == Player.WHITE ? "p" :"P";
+                        description += p.getPlayer() == Player.WHITE ? "p" :"P";
                         break;
 
                 }
