@@ -9,7 +9,9 @@ import java.awt.event.MouseMotionListener;
 import java.io.File;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 //panel
 //own class extend sub class
@@ -25,6 +27,10 @@ public class ChessView extends JPanel implements MouseListener, MouseMotionListe
 
 
     private Map<String, Image> keyNameValueImage = new HashMap<String, Image>();
+
+    private Set<Point> legalMoves = new HashSet<>();
+
+
     private int fromCol = -1;
     private int fromRow = -1;
 
@@ -89,8 +95,7 @@ public class ChessView extends JPanel implements MouseListener, MouseMotionListe
                 }
             }
         }
-//        drawImage(g2,0,0,"Rook-black");
-//        drawImage(g2,0,1,"Pawn-black");
+
 
         if(movingPiece != null && movingPiecePoint != null)
         {
@@ -123,40 +128,18 @@ public class ChessView extends JPanel implements MouseListener, MouseMotionListe
 
 
 
-//        int cellSide = 600/8;
-//        g2.fillRect(0,0,cellSide,cellSide);
-//        g2.fillRect(2*cellSide,0,cellSide,cellSide);
-//        g2.fillRect(4*cellSide,0,cellSide,cellSide);
-//        g2.fillRect(6*cellSide,0,cellSide,cellSide);
-//        g2.fillRect(8*cellSide,0,cellSide,cellSide);
 
-   /*     for(    int j = 0;    j<4;j++)
-
-        {
-//        g2.setColor(Color.white); //default color is black
-
-        for (int i = 0; i < 4; i++) {
-//            g2.fillRect(originX + (i * 2) * cellSide, originY + (j * 2) * cellSide, cellSide, cellSide);
-            drawSquare(g2,2*i,2*j,true);
-//            g2.fillRect(originX + (i * 2 + 1) * cellSide, originY + (j * 2 + 1) * cellSide, cellSide, cellSide);
-            drawSquare(g2,2*i+1,2*j+1,true);
-            drawSquare(g2,2*i+1,2*j,false);
-            drawSquare(g2,2*i,2*j+1,false);
+        g2.setColor(new Color(0, 255, 0, 100));
+        for (Point point : legalMoves) {
+            // Draw the indicators using screen coordinates
+            g2.fillOval(
+                    originX + point.x * cellSide + cellSide / 4,
+                    originY + point.y * cellSide + cellSide / 4,
+                    cellSide / 2,
+                    cellSide / 2
+            );
         }
 
-
-//        g2.setColor(Color.gray); //default color is black
-
-      /*
-        for (int i = 0; i < 4; i++) {
-//            g2.fillRect(originX +(i * 2 + 1) * cellSide, originY + (j * 2) * cellSide, cellSide, cellSide);
-            drawSquare(g2,2*i+1,2*j,false);
-//            g2.fillRect(originX + (i * 2) * cellSide, originY + (j * 2 + 1) * cellSide, cellSide, cellSide);
-            drawSquare(g2,2*i,2*j+1,false);
-        }
-
-
-       */
 
 
     }
@@ -173,7 +156,7 @@ public class ChessView extends JPanel implements MouseListener, MouseMotionListe
         if (res == null) {
             return null;
         } else {
-//        System.out.println("Yeah");
+
 
             File imgFile = new File(res.toURI());
 
@@ -196,30 +179,17 @@ public class ChessView extends JPanel implements MouseListener, MouseMotionListe
 
     private void drawBoard(Graphics2D g2) {
         for (int j = 0; j < 4; j++) {
-//        g2.setColor(Color.white); //default color is black
+
 
             for (int i = 0; i < 4; i++) {
-//            g2.fillRect(originX + (i * 2) * cellSide, originY + (j * 2) * cellSide, cellSide, cellSide);
+
                 drawSquare(g2, 2 * i, 2 * j, true);
-//            g2.fillRect(originX + (i * 2 + 1) * cellSide, originY + (j * 2 + 1) * cellSide, cellSide, cellSide);
                 drawSquare(g2, 2 * i + 1, 2 * j + 1, true);
                 drawSquare(g2, 2 * i + 1, 2 * j, false);
                 drawSquare(g2, 2 * i, 2 * j + 1, false);
             }
 
 
-//        g2.setColor(Color.gray); //default color is black
-
-      /*
-        for (int i = 0; i < 4; i++) {
-//            g2.fillRect(originX +(i * 2 + 1) * cellSide, originY + (j * 2) * cellSide, cellSide, cellSide);
-            drawSquare(g2,2*i+1,2*j,false);
-//            g2.fillRect(originX + (i * 2) * cellSide, originY + (j * 2 + 1) * cellSide, cellSide, cellSide);
-            drawSquare(g2,2*i,2*j+1,false);
-        }
-
-
-       */
 
         }
     }
@@ -239,6 +209,22 @@ public class ChessView extends JPanel implements MouseListener, MouseMotionListe
 
         movingPiece = chessDelegate.pieceAt(fromCol,fromRow);
 
+        legalMoves.clear();
+
+        // Calculate legal moves for the selected piece
+        if (movingPiece != null) {
+            for (int col = 0; col < 8; col++) {
+                for (int row = 0; row < 8; row++) {
+                    if (chessDelegate.isValidMove(fromCol, fromRow, col, row)) {
+                        // Store the legal moves in board coordinates
+                        legalMoves.add(new Point(col, 7 - row));  // Flip the row for display
+                    }
+                }
+            }
+        }
+
+        repaint();
+
 
     }
 
@@ -254,11 +240,15 @@ public class ChessView extends JPanel implements MouseListener, MouseMotionListe
 
         if(fromCol != col || fromRow != row)
         {
-            chessDelegate.movePiece(fromCol,fromRow,col,row);
+            movingPiecePoint = null;
+            chessDelegate.movePiece(fromCol, fromRow, col, row);
+            repaint();
         }
-//        System.out.println("from "+fromCol+ fromRow+ " to "+col+" "+row);
+
         movingPiece = null;
         movingPiecePoint = null;
+        legalMoves.clear();
+
 
     }
 
@@ -280,7 +270,6 @@ public class ChessView extends JPanel implements MouseListener, MouseMotionListe
     @Override
     public void mouseDragged(MouseEvent e) {
 
-//        System.out.println(e.getPoint());
         movingPiecePoint = e.getPoint();
         repaint();
 

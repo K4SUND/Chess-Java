@@ -50,18 +50,19 @@ public class ChessModel {
     void movePiece(int fromCol, int fromRow, int toCol, int toRow)
     {
 
+        if (!isValidMove(fromCol, fromRow, toCol, toRow)) {
+            return;
+        }
 
 
 
         ChessPiece movingPiece = pieceAt(fromCol,fromRow);
 
 
-//        System.out.println("from "+fromCol+ fromRow+ " to "+toCol+" "+toRow);
-
         //restricted (3rd condition)
         if(movingPiece==null || movingPiece.getPlayer() != playerInTurn || fromCol == toCol && fromRow == toRow)
         {
-//            System.out.println(fromCol+","+fromRow+","+toCol+","+toRow);
+
             return;
         }
 
@@ -81,10 +82,7 @@ public class ChessModel {
         pieceSet.remove(movingPiece);
         pieceSet.add(new ChessPiece(toCol,toRow,movingPiece.getPlayer(),movingPiece.getRank(), movingPiece.getImgName()));
 
-//        movingPiece.col = toCol;
-//        movingPiece.row = toRow;
 
-//        System.out.println(pieceSet.size());
 
 
         playerInTurn = playerInTurn == Player.WHITE ? Player.BLACK : Player.WHITE;
@@ -108,6 +106,90 @@ public class ChessModel {
         }
         return null;
     }
+
+    boolean isValidMove(int fromCol, int fromRow, int toCol, int toRow) {
+        ChessPiece piece = pieceAt(fromCol, fromRow);
+        if (piece == null) return false;
+
+        int colDiff = Math.abs(toCol - fromCol);
+        int rowDiff = Math.abs(toRow - fromRow);
+
+        switch (piece.getRank()) {
+            case PAWN:
+                int direction = (piece.getPlayer() == Player.WHITE) ? 1 : -1;
+
+                // Move forward
+                if (colDiff == 0 && toRow == fromRow + direction && pieceAt(toCol, toRow) == null) {
+                    return true;
+                }
+
+                // Double move on first move
+                if (colDiff == 0 && fromRow == (piece.getPlayer() == Player.WHITE ? 1 : 6)
+                        && toRow == fromRow + 2 * direction
+                        && pieceAt(toCol, fromRow + direction) == null
+                        && pieceAt(toCol, toRow) == null) {
+                    return true;
+                }
+
+                // Capture diagonally
+                if (colDiff == 1 && toRow == fromRow + direction && pieceAt(toCol, toRow) != null) {
+                    return true;
+                }
+
+                return false;
+
+            case KNIGHT:
+                return (colDiff == 2 && rowDiff == 1) || (colDiff == 1 && rowDiff == 2);
+            case BISHOP:
+                return colDiff == rowDiff;
+            case ROOK:
+                if (colDiff == 0 || rowDiff == 0) {
+                    int stepCol = (toCol > fromCol) ? 1 : (toCol < fromCol) ? -1 : 0;
+                    int stepRow = (toRow > fromRow) ? 1 : (toRow < fromRow) ? -1 : 0;
+
+                    int colCheck = fromCol + stepCol;
+                    int rowCheck = fromRow + stepRow;
+                    while (colCheck != toCol || rowCheck != toRow) {
+                        if (pieceAt(colCheck, rowCheck) != null) {
+                            return false;
+                        }
+                        colCheck += stepCol;
+                        rowCheck += stepRow;
+                    }
+                    return true;
+                }
+                return false;
+            case QUEEN:
+                return colDiff == 0 || rowDiff == 0 || colDiff == rowDiff;
+            case KING:
+                return colDiff <= 1 && rowDiff <= 1;
+            default:
+                return false;
+        }
+    }
+
+
+    public boolean isInCheck(Player player) {
+        ChessPiece king = findKing(player);
+        if (king == null) return false;
+
+        for (ChessPiece piece : pieceSet) {
+            if (piece.getPlayer() != player && isValidMove(piece.getCol(), piece.getRow(), king.getCol(), king.getRow())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private ChessPiece findKing(Player player) {
+        for (ChessPiece piece : pieceSet) {
+            if (piece.getRank() == Rank.KING && piece.getPlayer() == player) {
+                return piece;
+            }
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
         String description = "";
