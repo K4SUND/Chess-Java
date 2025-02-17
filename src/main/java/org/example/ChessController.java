@@ -14,7 +14,9 @@ import java.util.Scanner;
 import java.util.concurrent.Executors;
 
 public class ChessController implements ChessDelegate, ActionListener {
-    private String SOCKET_SERVER_IP = "172.20.10.2";
+//    private String SOCKET_SERVER_IP = "172.20.10.2";
+
+    private String SOCKET_SERVER_IP = "localhost";
     private int PORT = 50000;
     private JFrame frame;
     private ChessModel chessModel = new ChessModel();

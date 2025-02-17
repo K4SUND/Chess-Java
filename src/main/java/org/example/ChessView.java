@@ -97,13 +97,16 @@ public class ChessView extends JPanel implements MouseListener, MouseMotionListe
         }
 
 
-        if(movingPiece != null && movingPiecePoint != null)
-        {
-            //not descrete
-            Image img = keyNameValueImage.get(movingPiece.getImgName());
-            g2.drawImage(img,movingPiecePoint.x - cellSide/2,movingPiecePoint.y-cellSide/2,cellSide,cellSide, null);
-
+        if(movingPiece != null){
+            if(movingPiecePoint != null)
+            {
+                Image img = keyNameValueImage.get(movingPiece.getImgName());
+                g2.drawImage(img,movingPiecePoint.x - cellSide/2,movingPiecePoint.y - cellSide/2,cellSide,cellSide,null);
+            }else {
+                drawImage(g2,fromCol,fromRow,movingPiece.getImgName());
+            }
         }
+
     }
 
 
@@ -231,23 +234,23 @@ public class ChessView extends JPanel implements MouseListener, MouseMotionListe
     @Override
     public void mouseReleased(MouseEvent e) {
 
-
-
-        int col = (e.getPoint().x - originX)/cellSide;
-        int row = 7- (e.getPoint().y - originY)/cellSide;
-
-
-
-        if(fromCol != col || fromRow != row)
+        if(movingPiece != null)
         {
-            movingPiecePoint = null;
-            chessDelegate.movePiece(fromCol, fromRow, col, row);
-            repaint();
+            int col = (e.getPoint().x - originX)/cellSide;
+            int row = 7- (e.getPoint().y - originY)/cellSide;
+
+            if(fromCol != col || fromRow != row)
+            {
+                chessDelegate.movePiece(fromCol, fromRow, col, row);
+            }
+
+
         }
 
         movingPiece = null;
         movingPiecePoint = null;
         legalMoves.clear();
+        repaint();
 
 
     }
@@ -270,10 +273,11 @@ public class ChessView extends JPanel implements MouseListener, MouseMotionListe
     @Override
     public void mouseDragged(MouseEvent e) {
 
-        movingPiecePoint = e.getPoint();
-        repaint();
-
-
+        if(movingPiece != null)
+        {
+            movingPiecePoint = e.getPoint();
+            repaint();
+        }
 
     }
 
