@@ -65,7 +65,7 @@ public class ChessView extends JPanel implements MouseListener, MouseMotionListe
 
             }
         } catch (Exception e) {
-          e.printStackTrace();
+            e.printStackTrace();
         }
 
         addMouseListener(this);
@@ -85,7 +85,7 @@ public class ChessView extends JPanel implements MouseListener, MouseMotionListe
 
                 if(p!=null && p != movingPiece)
                 {
-                    drawImage(g2,col,row, p.imgName);
+                    drawImage(g2,col,row, p.getImgName());
                 }
             }
         }
@@ -95,7 +95,7 @@ public class ChessView extends JPanel implements MouseListener, MouseMotionListe
         if(movingPiece != null && movingPiecePoint != null)
         {
             //not descrete
-            Image img = keyNameValueImage.get(movingPiece.imgName);
+            Image img = keyNameValueImage.get(movingPiece.getImgName());
             g2.drawImage(img,movingPiecePoint.x - cellSide/2,movingPiecePoint.y-cellSide/2,cellSide,cellSide, null);
 
         }
@@ -103,23 +103,23 @@ public class ChessView extends JPanel implements MouseListener, MouseMotionListe
 
 
 
-//overwrite one method
-@Override
-protected void paintChildren(Graphics g) {
-    super.paintChildren(g);
+    //overwrite one method
+    @Override
+    protected void paintChildren(Graphics g) {
+        super.paintChildren(g);
 
-    int smaller = Math.min(getSize().width,getSize().height);
-    cellSide = (int) (((double)smaller)*scaleFactor/8);
+        int smaller = Math.min(getSize().width,getSize().height);
+        cellSide = (int) (((double)smaller)*scaleFactor/8);
 
-    originX = (getSize().width-8 * cellSide)/2;
-    originY = (getSize().height-8 * cellSide)/2;
+        originX = (getSize().width-8 * cellSide)/2;
+        originY = (getSize().height-8 * cellSide)/2;
 
 
 
-    Graphics2D g2 = (Graphics2D) g;
+        Graphics2D g2 = (Graphics2D) g;
 
-    drawBoard(g2);
-    drawPieces(g2);
+        drawBoard(g2);
+        drawPieces(g2);
 
 
 
@@ -159,53 +159,53 @@ protected void paintChildren(Graphics g) {
        */
 
 
-}
+    }
 
-private void drawImage(Graphics2D g2, int col, int row, String imgName){
-    Image img = keyNameValueImage.get(imgName);
-    g2.drawImage(img,originX+col*cellSide,originY+(7-row)*cellSide,cellSide,cellSide, null);
+    private void drawImage(Graphics2D g2, int col, int row, String imgName){
+        Image img = keyNameValueImage.get(imgName);
+        g2.drawImage(img,originX+col*cellSide,originY+(7-row)*cellSide,cellSide,cellSide, null);
 
-}
+    }
 
-private Image loadImage(String imgFileName) throws Exception {
-    ClassLoader classLoader = getClass().getClassLoader();
-    URL res = classLoader.getResource("img/"+imgFileName);
-    if (res == null) {
-        return null;
-    } else {
+    private Image loadImage(String imgFileName) throws Exception {
+        ClassLoader classLoader = getClass().getClassLoader();
+        URL res = classLoader.getResource("img/"+imgFileName);
+        if (res == null) {
+            return null;
+        } else {
 //        System.out.println("Yeah");
 
-        File imgFile = new File(res.toURI());
+            File imgFile = new File(res.toURI());
 
-        return ImageIO.read(imgFile);
+            return ImageIO.read(imgFile);
+
+
+        }
 
 
     }
 
 
-}
+    private void drawSquare(Graphics2D g2, int col, int row, boolean light) {
+        g2.setColor(light ? Color.white : Color.gray);
+        g2.fillRect(originX + col * cellSide, originY + row * cellSide, cellSide, cellSide);
 
 
-private void drawSquare(Graphics2D g2, int col, int row, boolean light) {
-    g2.setColor(light ? Color.white : Color.gray);
-    g2.fillRect(originX + col * cellSide, originY + row * cellSide, cellSide, cellSide);
+    }
 
 
-}
-
-
-private void drawBoard(Graphics2D g2) {
-    for (int j = 0; j < 4; j++) {
+    private void drawBoard(Graphics2D g2) {
+        for (int j = 0; j < 4; j++) {
 //        g2.setColor(Color.white); //default color is black
 
-        for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 4; i++) {
 //            g2.fillRect(originX + (i * 2) * cellSide, originY + (j * 2) * cellSide, cellSide, cellSide);
-            drawSquare(g2, 2 * i, 2 * j, true);
+                drawSquare(g2, 2 * i, 2 * j, true);
 //            g2.fillRect(originX + (i * 2 + 1) * cellSide, originY + (j * 2 + 1) * cellSide, cellSide, cellSide);
-            drawSquare(g2, 2 * i + 1, 2 * j + 1, true);
-            drawSquare(g2, 2 * i + 1, 2 * j, false);
-            drawSquare(g2, 2 * i, 2 * j + 1, false);
-        }
+                drawSquare(g2, 2 * i + 1, 2 * j + 1, true);
+                drawSquare(g2, 2 * i + 1, 2 * j, false);
+                drawSquare(g2, 2 * i, 2 * j + 1, false);
+            }
 
 
 //        g2.setColor(Color.gray); //default color is black
@@ -221,8 +221,8 @@ private void drawBoard(Graphics2D g2) {
 
        */
 
+        }
     }
-}
 
 
     @Override
@@ -234,10 +234,10 @@ private void drawBoard(Graphics2D g2) {
     public void mousePressed(MouseEvent e) {
 
 
-       fromCol = (e.getPoint().x - originX)/cellSide;
-       fromRow = 7 - (e.getPoint().y - originY)/cellSide;
+        fromCol = (e.getPoint().x - originX)/cellSide;
+        fromRow = 7 - (e.getPoint().y - originY)/cellSide;
 
-       movingPiece = chessDelegate.pieceAt(fromCol,fromRow);
+        movingPiece = chessDelegate.pieceAt(fromCol,fromRow);
 
 
     }
