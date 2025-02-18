@@ -66,6 +66,13 @@ public class ChessModel {
             return;
         }
 
+        if(!isKingSafeAfterMove(fromCol,fromRow,toCol,toRow))
+        {
+            System.out.println("Invalid move: King is in check");
+            return;
+
+        }
+
         ChessPiece target = pieceAt(toCol,toRow);
         if(target != null )
         {
@@ -120,7 +127,7 @@ public class ChessModel {
 
                 // Move forward
                 if (colDiff == 0 && toRow == fromRow + direction && pieceAt(toCol, toRow) == null) {
-                    return true;
+                    return isKingSafeAfterMove(fromCol,fromRow,toCol,toRow);
                 }
 
                 // Double move on first move
@@ -128,45 +135,110 @@ public class ChessModel {
                         && toRow == fromRow + 2 * direction
                         && pieceAt(toCol, fromRow + direction) == null
                         && pieceAt(toCol, toRow) == null) {
-                    return true;
+                    return isKingSafeAfterMove(fromCol,fromRow,toCol,toRow);
                 }
 
                 // Capture diagonally
                 if (colDiff == 1 && toRow == fromRow + direction && pieceAt(toCol, toRow) != null) {
-                    return true;
+                    return isKingSafeAfterMove(fromCol,fromRow,toCol,toRow);
                 }
 
                 return false;
 
             case KNIGHT:
-                return (colDiff == 2 && rowDiff == 1) || (colDiff == 1 && rowDiff == 2);
+                if ((colDiff == 2 && rowDiff == 1) || (colDiff == 1 && rowDiff == 2)) {
+                    return isKingSafeAfterMove(fromCol, fromRow, toCol, toRow);
+                }
+                return false;
             case BISHOP:
-                return colDiff == rowDiff;
-            case ROOK:
-                if (colDiff == 0 || rowDiff == 0) {
-                    int stepCol = (toCol > fromCol) ? 1 : (toCol < fromCol) ? -1 : 0;
-                    int stepRow = (toRow > fromRow) ? 1 : (toRow < fromRow) ? -1 : 0;
+                if (colDiff == rowDiff && isPathClear(fromCol, fromRow, toCol, toRow)) {
+                    return isKingSafeAfterMove(fromCol, fromRow, toCol, toRow);
+                }
+                return false;
 
-                    int colCheck = fromCol + stepCol;
-                    int rowCheck = fromRow + stepRow;
-                    while (colCheck != toCol || rowCheck != toRow) {
-                        if (pieceAt(colCheck, rowCheck) != null) {
-                            return false;
-                        }
-                        colCheck += stepCol;
-                        rowCheck += stepRow;
-                    }
-                    return true;
+            case ROOK:
+                if ((colDiff == 0 || rowDiff == 0) && isPathClear(fromCol, fromRow, toCol, toRow)) {
+                    return isKingSafeAfterMove(fromCol, fromRow, toCol, toRow);
                 }
                 return false;
             case QUEEN:
-                return colDiff == 0 || rowDiff == 0 || colDiff == rowDiff;
+                if ((colDiff == rowDiff || colDiff == 0 || rowDiff == 0) && isPathClear(fromCol, fromRow, toCol, toRow)) {
+                    return isKingSafeAfterMove(fromCol, fromRow, toCol, toRow);
+                }
+                return false;
+
+
             case KING:
-                return colDiff <= 1 && rowDiff <= 1;
+                if (colDiff <= 1 && rowDiff <= 1) {
+                    if (isSquareAttacked(toCol, toRow, piece.getPlayer())) {
+                        return false; // King cannot move into check
+                    }
+                    return isKingSafeAfterMove(fromCol, fromRow, toCol, toRow);
+                }
+                return false;
+
+
+
             default:
                 return false;
         }
     }
+
+
+    private boolean isPathClear(int fromCol, int fromRow, int toCol, int toRow) {
+        int stepCol = Integer.compare(toCol, fromCol);
+        int stepRow = Integer.compare(toRow, fromRow);
+
+        int colCheck = fromCol + stepCol;
+        int rowCheck = fromRow + stepRow;
+
+        while (colCheck != toCol || rowCheck != toRow) {
+            if (pieceAt(colCheck, rowCheck) != null) {
+                return false;
+            }
+            colCheck += stepCol;
+            rowCheck += stepRow;
+        }
+        return true;
+    }
+
+    public boolean isSquareAttacked(int col, int row, Player player) {
+        for (ChessPiece piece : pieceSet) {
+            if (piece.getPlayer() != player && isValidMove(piece.getCol(), piece.getRow(), col, row)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+
+
+    public boolean isKingSafeAfterMove(int fromCol, int fromRow, int toCol, int toRow) {
+        ChessPiece movingPiece = pieceAt(fromCol, fromRow);
+        ChessPiece targetPiece = pieceAt(toCol, toRow);
+
+        // Simulate the move
+        pieceSet.remove(movingPiece);
+        if (targetPiece != null) {
+            pieceSet.remove(targetPiece);
+        }
+        pieceSet.add(new ChessPiece(toCol, toRow, movingPiece.getPlayer(), movingPiece.getRank(), movingPiece.getImgName()));
+
+        boolean isKingSafe = !isInCheck(movingPiece.getPlayer());
+
+        // Undo the simulated move
+        pieceSet.removeIf(p -> p.getCol() == toCol && p.getRow() == toRow);
+        pieceSet.add(movingPiece);
+        if (targetPiece != null) {
+            pieceSet.add(targetPiece);
+        }
+
+        return isKingSafe;
+    }
+
+
+
 
 
     public boolean isInCheck(Player player) {

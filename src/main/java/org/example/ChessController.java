@@ -24,11 +24,19 @@ public class ChessController implements ChessDelegate, ActionListener {
     private JButton resetBtn;
     private JButton serverBtn;
     private JButton clientBtn;
+
+
+    //Networking Part
+
     private ServerSocket listener;
     private Socket socket;
     private PrintWriter printWriter;
     private boolean isServer = false;
     private boolean isClient = false;
+
+
+
+
 
     public ChessController() {
         chessModel.reset();

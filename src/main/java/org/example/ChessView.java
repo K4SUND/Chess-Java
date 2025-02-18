@@ -16,6 +16,8 @@ import java.util.Set;
 //panel
 //own class extend sub class
 public class ChessView extends JPanel implements MouseListener, MouseMotionListener {
+    private final Color lightWoodColor = new Color(222, 184, 135); // Light brown
+    private final Color darkWoodColor = new Color(139, 69, 19);    // Dark brown
 
     private ChessDelegate chessDelegate ;
 
@@ -132,6 +134,8 @@ public class ChessView extends JPanel implements MouseListener, MouseMotionListe
 
 
 
+        //shows valid moves
+
         g2.setColor(new Color(0, 255, 0, 100));
         for (Point point : legalMoves) {
             // Draw the indicators using screen coordinates
@@ -173,7 +177,7 @@ public class ChessView extends JPanel implements MouseListener, MouseMotionListe
 
 
     private void drawSquare(Graphics2D g2, int col, int row, boolean light) {
-        g2.setColor(light ? Color.white : Color.gray);
+        g2.setColor(light ? lightWoodColor : darkWoodColor);
         g2.fillRect(originX + col * cellSide, originY + row * cellSide, cellSide, cellSide);
 
 
