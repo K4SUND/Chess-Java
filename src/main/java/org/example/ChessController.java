@@ -13,7 +13,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 import java.util.List;
-//import java.util.Timer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -71,8 +70,11 @@ public class ChessController implements ChessDelegate, ActionListener {
         var buttonsPanel = new JPanel(new GridLayout(3, 1));
 
         var controlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+
+        // Reset button initially not visible
         resetBtn = new JButton("Reset");
         resetBtn.addActionListener(this);
+        resetBtn.setVisible(false);
         controlPanel.add(resetBtn);
 
         serverBtn = new JButton("Start Server");
@@ -170,7 +172,8 @@ public class ChessController implements ChessDelegate, ActionListener {
 
             // Re-enable server button on main window
             SwingUtilities.invokeLater(() -> {
-                serverBtn.setEnabled(true);
+                serverBtn.setVisible(true);
+                clientBtn.setVisible(true);
                 frame.setTitle("Chess");
             });
 
@@ -248,8 +251,10 @@ public class ChessController implements ChessDelegate, ActionListener {
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(20); // Support up to 20 concurrent connections
         timerExecutor = Executors.newScheduledThreadPool(1);
 
-        // Make main window a client-only window
-        frame.setTitle("Chess - Client Mode");
+        // Make main window a client-only window and hide server/client buttons
+        frame.setTitle("Chess - Server Mode");
+        serverBtn.setVisible(false);
+        clientBtn.setVisible(false);
         resetBoard();
         updateStatus("Server started in separate window");
 
@@ -294,6 +299,11 @@ public class ChessController implements ChessDelegate, ActionListener {
     private void connectAsClient() {
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
 
+        // Hide server/client buttons and show reset button
+        serverBtn.setVisible(false);
+        clientBtn.setVisible(false);
+        resetBtn.setVisible(true);
+
         executor.execute(() -> {
             try {
                 clientSocket = new Socket(SOCKET_SERVER_IP, PORT);
@@ -316,8 +326,9 @@ public class ChessController implements ChessDelegate, ActionListener {
 
                 // Re-enable connection buttons
                 SwingUtilities.invokeLater(() -> {
-                    clientBtn.setEnabled(true);
-                    serverBtn.setEnabled(true);
+                    clientBtn.setVisible(true);
+                    serverBtn.setVisible(true);
+                    resetBtn.setVisible(false);
                 });
             }
         });
@@ -365,6 +376,55 @@ public class ChessController implements ChessDelegate, ActionListener {
                 }
                 break;
 
+            case "RESET":
+                if (parts.length >= 2 && parts[1].equals(gameId)) {
+                    // Opponent requested reset, ask for confirmation
+                    SwingUtilities.invokeLater(() -> {
+                        int response = JOptionPane.showConfirmDialog(
+                                frame,
+                                "Your opponent wants to reset the game. Do you agree?",
+                                "Reset Request",
+                                JOptionPane.YES_NO_OPTION
+                        );
+
+                        if (response == JOptionPane.YES_OPTION) {
+                            // Confirm reset
+                            clientWriter.println("RESET_CONFIRM," + gameId);
+                            resetBoard();
+                            updateStatus("Game reset");
+
+                            // Reset turn
+                            isMyTurn = clientPlayer == Player.WHITE;
+                            updateTimerStatus();
+                        } else {
+                            // Deny reset
+                            clientWriter.println("RESET_DENY," + gameId);
+                        }
+                    });
+                }
+                break;
+
+            case "RESET_CONFIRM":
+                if (parts.length >= 2 && parts[1].equals(gameId)) {
+                    SwingUtilities.invokeLater(() -> {
+                        resetBoard();
+                        updateStatus("Game reset confirmed by opponent");
+
+                        // Reset turn
+                        isMyTurn = clientPlayer == Player.WHITE;
+                        updateTimerStatus();
+                    });
+                }
+                break;
+
+            case "RESET_DENY":
+                if (parts.length >= 2 && parts[1].equals(gameId)) {
+                    SwingUtilities.invokeLater(() -> {
+                        updateStatus("Reset request denied by opponent");
+                    });
+                }
+                break;
+
             case "TIME":
                 if (parts.length >= 3 && parts[1].equals(gameId)) {
                     int opponentTime = Integer.parseInt(parts[2]);
@@ -394,9 +454,11 @@ public class ChessController implements ChessDelegate, ActionListener {
                             "Server Shutdown",
                             JOptionPane.INFORMATION_MESSAGE);
 
-                    // Re-enable connection buttons
-                    clientBtn.setEnabled(true);
-                    serverBtn.setEnabled(true);
+                    // Re-enable connection buttons and hide reset
+                    clientBtn.setVisible(true);
+                    serverBtn.setVisible(true);
+                    resetBtn.setVisible(false);
+                    isConnectedAsClient = false;
                 });
                 break;
 
@@ -473,17 +535,23 @@ public class ChessController implements ChessDelegate, ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == resetBtn) {
-            resetBoard();
+            // Only show reset confirmation when connected as client
             if (isConnectedAsClient && clientWriter != null) {
-                clientWriter.println("RESET," + gameId);
+                int response = JOptionPane.showConfirmDialog(
+                        frame,
+                        "Are you sure you want to reset the game? This will request a reset from your opponent.",
+                        "Reset Game",
+                        JOptionPane.YES_NO_OPTION
+                );
+
+                if (response == JOptionPane.YES_OPTION) {
+                    clientWriter.println("RESET," + gameId);
+                    updateStatus("Reset request sent to opponent");
+                }
             }
         } else if (e.getSource() == serverBtn) {
-            serverBtn.setEnabled(false);
-            clientBtn.setEnabled(false);
             startServer();
         } else if (e.getSource() == clientBtn) {
-            serverBtn.setEnabled(false);
-            clientBtn.setEnabled(false);
             connectAsClient();
         }
     }
@@ -608,24 +676,52 @@ public class ChessController implements ChessDelegate, ActionListener {
                         if (session != null) {
                             // Forward the reset request to the opponent
                             session.broadcastToOpponent(this, "RESET," + gameId);
+                            logToServer("Reset request in game " + gameId);
+                        }
+                    }
+                    break;
 
-                            // Reset times
+                case "RESET_CONFIRM":
+                    if (parts.length >= 2) {
+                        String gameId = parts[1];
+                        GameSession session = gameSessions.get(gameId);
+
+                        if (session != null) {
+                            // Forward the reset confirmation to the opponent
+                            session.broadcastToOpponent(this, "RESET_CONFIRM," + gameId);
+
+                            // Reset times and turns
                             timeRemaining = DEFAULT_TIMER_MINUTES * 60;
 
-                            // Reset turns
+                            // Reset turns based on player color
                             if (player == Player.WHITE) {
                                 isTurn = true;
                                 if (session.blackPlayer != null) {
                                     session.blackPlayer.isTurn = false;
+                                    session.blackPlayer.timeRemaining = DEFAULT_TIMER_MINUTES * 60;
                                 }
                             } else {
                                 isTurn = false;
                                 if (session.whitePlayer != null) {
                                     session.whitePlayer.isTurn = true;
+                                    session.whitePlayer.timeRemaining = DEFAULT_TIMER_MINUTES * 60;
                                 }
                             }
 
-                            logToServer("Game reset: " + gameId);
+                            logToServer("Game reset confirmed for game " + gameId);
+                        }
+                    }
+                    break;
+
+                case "RESET_DENY":
+                    if (parts.length >= 2) {
+                        String gameId = parts[1];
+                        GameSession session = gameSessions.get(gameId);
+
+                        if (session != null) {
+                            // Forward the reset denial to the opponent
+                            session.broadcastToOpponent(this, "RESET_DENY," + gameId);
+                            logToServer("Reset request denied for game " + gameId);
                         }
                     }
                     break;
